@@ -34,7 +34,11 @@ def gstreamer_pipeline(capture_width=1280,
     )
 
 
-def show_camera():
+def show_camera(h_sensitivity: int = 20,
+                s_lower: int = 70,
+                s_higher: int = 255,
+                v_lower: int = 50,
+                v_higher: int = 255):
     # print(gstreamer_pipeline(flip_method=4))
     # cap = cv2.VideoCapture(gstreamer_pipeline(flip_method=4),
     #                        cv2.CAP_GSTREAMER)
@@ -47,15 +51,56 @@ def show_camera():
         while cv2.getWindowProperty("MCV Lab_1 Var_1", 0) >= 0:
             ret, frame = cap.read()
 
-            # step 1 - Get coords of the area of interest
+            # Step 1 - Get coords of the area of interest
             height, width, _ = frame.shape
-            # 30x30 square in the middle of frame
-            upper_left = (width // 2 - 30, height // 2 + 30)
-            bottom_right = (width // 2 + 30, height // 2 - 30)
+            # 60x60 square in the middle of frame
+            upper_left = (width // 2 - 30, height // 2 - 30)
+            bottom_right = (width // 2 + 29, height // 2 + 29)
 
-            # step 2 - TODO: Write this step
+            # Step 2 - Detecting colors in the area of interest
+            # Converting from BGR to HSV color space
+            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-            # Draw green rectangle (square)
+            # Create mask for red color
+            # Range for lower red
+            lower_red = np.array([0, s_lower, v_lower])
+            upper_red = np.array([h_sensitivity, s_higher, v_higher])
+            mask1 = cv2.inRange(hsv, lower_red, upper_red)
+
+            # Range for upper red
+            lower_red = np.array([180 - h_sensitivity, s_lower, v_lower])
+            upper_red = np.array([180, s_higher, v_higher])
+            mask_red = mask1 + cv2.inRange(hsv, lower_red, upper_red)
+            # Crop mask with the area of interest
+            mask_red = mask_red[upper_left[1]:bottom_right[1] + 1,
+                                upper_left[0]:bottom_right[0] + 1]
+            if 0 not in mask_red:
+                pass
+                # TODO: do an action
+
+            # Create mask for green color
+            lower_green = np.array([60 - h_sensitivity, s_lower, v_lower])
+            upper_green = np.array([60 + h_sensitivity, s_higher, v_higher])
+            mask_green = cv2.inRange(hsv, lower_green, upper_green)
+            # Crop mask with the area of interest
+            mask_green = mask_green[upper_left[1]:bottom_right[1] + 1,
+                                    upper_left[0]:bottom_right[0] + 1]
+            if 0 not in mask_green:
+                pass
+                # TODO: do an action
+
+            # Create mask for blue color
+            lower_blue = np.array([120 - h_sensitivity, s_lower, v_lower])
+            upper_blue = np.array([120 + h_sensitivity, s_higher, v_higher])
+            mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
+            # Crop mask with the area of interest
+            mask_blue = mask_blue[upper_left[1]:bottom_right[1] + 1,
+                                  upper_left[0]:bottom_right[0] + 1]
+            if 0 not in mask_blue:
+                pass
+                # TODO: do an action
+
+            # Draw green rectangle (square) and show the frame
             cv2.rectangle(frame, upper_left, bottom_right, (0, 255, 0),
                           thickness=1)
             cv2.imshow('frame', frame)
