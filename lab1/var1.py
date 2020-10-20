@@ -6,6 +6,7 @@
 import cv2
 import numpy as np
 import time
+import sys, getopt
 
 
 def gstreamer_pipeline(capture_width=1280,
@@ -51,12 +52,12 @@ def show_frame(frame, start_time,
     cv2.imshow('frame', frame)
 
 
-def show_camera(fps: int = 30,  # framerate
-                h_sensitivity: int = 20,
-                s_lower: int = 70,
-                s_higher: int = 255,
-                v_lower: int = 50,
-                v_higher: int = 255):
+def show_camera(h_sensitivity: int,
+                s_lower: int,
+                s_higher: int,
+                v_lower: int,
+                v_higher: int,
+                fps: int = 30):
     # print(gstreamer_pipeline(flip_method=4, framerate=fps))
     # cap = cv2.VideoCapture(gstreamer_pipeline(flip_method=4, framerate=fps),
     #                        cv2.CAP_GSTREAMER)
@@ -136,3 +137,60 @@ def show_camera(fps: int = 30,  # framerate
         cv2.destroyAllWindows()
     else:
         print("Unable to open camera")
+
+
+def print_usage():
+    print('Usage: python var1.py [-h <int>] [-s <int,int>] '
+          '[-v <int,int>] [--fps=<int>]')
+
+
+def main(argv: list,
+         h_sensitivity: int = 20,
+         s_lower: int = 70,
+         s_higher: int = 255,
+         v_lower: int = 50,
+         v_higher: int = 255,
+         fps: int = 30):
+    try:
+        opts, args = getopt.getopt(argv, "h:s:v:", ["help", "fps="])
+    except getopt.GetoptError:
+        print_usage()
+        sys.exit(2)
+
+    for opt, arg in opts:
+        if opt in ['-h']:
+            try:
+                h_sensitivity = int(arg)
+            except ValueError:
+                print_usage()
+                sys.exit(2)
+        elif opt in ['-s']:
+            try:
+                arg = tuple(map(int, arg.split(',')))
+                s_lower = tuple(arg)[0]
+                s_higher = tuple(arg)[1]
+            except ValueError:
+                print_usage()
+                sys.exit(2)
+        elif opt in ['-v']:
+            try:
+                arg = tuple(map(int, arg.split(',')))
+                v_lower = tuple(arg)[0]
+                v_higher = tuple(arg)[1]
+            except ValueError:
+                print_usage()
+                sys.exit(2)
+        elif opt in ['--fps']:
+            try:
+                fps = arg
+            except ValueError:
+                print_usage()
+                sys.exit(2)
+        else:
+            print_usage()
+            sys.exit(2)
+    show_camera(h_sensitivity, s_lower, s_higher, v_lower, v_higher, fps)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
