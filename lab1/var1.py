@@ -3,10 +3,12 @@
 # 2020
 # by seniorkot & atepaevm
 
+import getopt
+import sys
+import time
+
 import cv2
 import numpy as np
-import time
-import sys, getopt
 
 
 def gstreamer_pipeline(capture_width=1280,
@@ -40,12 +42,10 @@ def show_frame(frame, start_time,
                upper_left: tuple,
                bottom_right: tuple,
                color: tuple = (0, 255, 255)) -> None:
-    # Draw green rectangle (square)
-    cv2.rectangle(frame, upper_left, bottom_right, color,
-                  thickness=2)
+    # Draw a square of the area of interest
+    cv2.rectangle(frame, upper_left, bottom_right, color, thickness=2)
     # Print processing time
-    cv2.putText(frame, "Time: {:.4f}sec"
-                .format(time.time() - start_time),
+    cv2.putText(frame, "Time: {:.4f}sec".format(time.time() - start_time),
                 org=(10, 50), color=(255, 0, 0), thickness=2,
                 fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1)
     # Show the frame
@@ -140,8 +140,9 @@ def show_camera(h_sensitivity: int,
 
 
 def print_usage():
-    print('Usage: python var1.py [-h <int>] [-s <int,int>] '
-          '[-v <int,int>] [--fps=<int>]')
+    print('Usage: python var1.py [-h <int>|--hue=<int>] '
+          '[-s <int,int>|--saturation=<int,int>] '
+          '[-v <int,int>|--value=<int,int>] [--fps=<int>]')
 
 
 def main(argv: list,
@@ -152,19 +153,20 @@ def main(argv: list,
          v_higher: int = 255,
          fps: int = 30):
     try:
-        opts, args = getopt.getopt(argv, "h:s:v:", ["help", "fps="])
+        opts, args = getopt.getopt(argv, "h:s:v:", ["hue=", "saturation=",
+                                                    "value=", "help", "fps="])
     except getopt.GetoptError:
         print_usage()
         sys.exit(2)
 
     for opt, arg in opts:
-        if opt in ['-h']:
+        if opt in ['-h', '--hue']:
             try:
                 h_sensitivity = int(arg)
             except ValueError:
                 print_usage()
                 sys.exit(2)
-        elif opt in ['-s']:
+        elif opt in ['-s', '--saturation']:
             try:
                 arg = tuple(map(int, arg.split(',')))
                 s_lower = tuple(arg)[0]
@@ -172,7 +174,7 @@ def main(argv: list,
             except ValueError:
                 print_usage()
                 sys.exit(2)
-        elif opt in ['-v']:
+        elif opt in ['-v', '--value']:
             try:
                 arg = tuple(map(int, arg.split(',')))
                 v_lower = tuple(arg)[0]
