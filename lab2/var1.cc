@@ -102,6 +102,7 @@ void mean_filter_neon(const uint8_t* src, uint8_t* dst, int width, int height) {
                 // 16-bit/pixel for temporary result
                 uint16x8_t temp;
 
+                // 3x3 square pixels addition
                 temp = vaddl_u8(src_px1.val[i], src_px2.val[i]);
                 temp = vaddw_u8(temp, src_px3.val[i]);
                 temp = vaddw_u8(temp, src_px4.val[i]);
@@ -114,14 +115,13 @@ void mean_filter_neon(const uint8_t* src, uint8_t* dst, int width, int height) {
                 // To divide by 9 we will instead multiply by the inverse (65536/9) = 7282
                 temp = vreinterpretq_u16_s16(vqrdmulhq_s16(i168divisor, vreinterpretq_s16_u16(temp)));
 
-                // Shift right by 8, "narrow" to 8-bits (recall temp is 16-bit).
-                result.val[i] = vshrn_n_u16(temp, 8);
+                // Store 64 bit
+                result.val[i] = vmovn_u16(temp);
             }
 
             vst3_u8((dst + width * y + x), result);
         }
     }
-
 }
 
 /**
