@@ -83,7 +83,7 @@ void mean_filter_neon(const uint8_t* src, uint8_t* dst, int width, int height) {
             y_top = y == 0 ? 0 : y - 1;
             y_bot = y + 1 == height ? y : y + 1;
 
-            // Load pixels into 27 registers split by channel
+            // Load pixels split by channel
             uint8x8x3_t src_px1 = vld3_u8(&src[width * y_top + x_lt]);
             uint8x8x3_t src_px2 = vld3_u8(&src[width * y_top + x]);
             uint8x8x3_t src_px3 = vld3_u8(&src[width * y_top + x_rt]);
@@ -94,11 +94,12 @@ void mean_filter_neon(const uint8_t* src, uint8_t* dst, int width, int height) {
             uint8x8x3_t src_px8 = vld3_u8(&src[width * y_bot + x]);
             uint8x8x3_t src_px9 = vld3_u8(&src[width * y_bot + x_rt]);
 
-            // 3 registers to store result
+            // Result variable
             uint8x8x3_t result;
 
             // Loop through RGB colors
             for (int i = 0; i < 3; i++) {
+                // 16-bit/pixel for temporary result
                 uint16x8_t temp;
 
                 temp = vaddl_u8(src_px1.val[i], src_px2.val[i]);
@@ -117,7 +118,7 @@ void mean_filter_neon(const uint8_t* src, uint8_t* dst, int width, int height) {
                 result.val[i] = vshrn_n_u16(temp, 8);
             }
 
-            vst3_u8(dst, result);
+            vst3_u8((dst + width * y + x), result);
         }
     }
 
