@@ -96,14 +96,14 @@ void mean_filter_neon(const uint8_t* src, uint8_t* dst, int width, int height) {
                 uint16x8_t temp;
                 uint8x8_t result;
 
-                temp = vadd_u8(src_px1.val[i], src_px2.val[i]);
-                temp = vadd_u8(temp, src_px3.val[i]);
-                temp = vadd_u8(temp, src_px4.val[i]);
-                temp = vadd_u8(temp, src_px5.val[i]);
-                temp = vadd_u8(temp, src_px6.val[i]);
-                temp = vadd_u8(temp, src_px7.val[i]);
-                temp = vadd_u8(temp, src_px8.val[i]);
-                temp = vadd_u8(temp, src_px9.val[i]);
+                temp = vaddl_u8(src_px1.val[i], src_px2.val[i]);
+                temp = vaddw_u8(temp, src_px3.val[i]);
+                temp = vaddw_u8(temp, src_px4.val[i]);
+                temp = vaddw_u8(temp, src_px5.val[i]);
+                temp = vaddw_u8(temp, src_px6.val[i]);
+                temp = vaddw_u8(temp, src_px7.val[i]);
+                temp = vaddw_u8(temp, src_px8.val[i]);
+                temp = vaddw_u8(temp, src_px9.val[i]);
 
                 // TODO: Div by 9 and put the result into result variable
 
