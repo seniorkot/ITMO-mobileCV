@@ -67,9 +67,11 @@ void mean_filter(const Mat src, Mat dst, int width, int height) {
  */
 void mean_filter_neon(const uint8_t* src, uint8_t* dst, int width, int height) {
 
-    // Mul width and height with 3
+    // Mul width with 3 (RGB channels)
     width *= 3;
-    height *= 3;
+
+    // 65536/9 - used with doubling saturating return high multiply
+    int16x8_t i168divisor = vdupq_n_s16(7282/2);
 
     for (int x = 0; x < width; x += 8 * 3) {
         for (int y = 0; y < height; y++) {
@@ -78,8 +80,8 @@ void mean_filter_neon(const uint8_t* src, uint8_t* dst, int width, int height) {
             int x_lt, x_rt, y_top, y_bot;
             x_lt = x == 0 ? 0 : x - 3;
             x_rt = x + 3 == width ? x : x + 3;
-            y_top = y == 0 ? 0 : y - 3;
-            y_bot = y + 3 == height ? y : y + 3;
+            y_top = y == 0 ? 0 : y - 1;
+            y_bot = y + 1 == height ? y : y + 1;
 
             // Load pixels into 27 registers split by channel
             uint8x8x3_t src_px1 = vld3_u8(&src[width * y_top + x_lt]);
@@ -92,9 +94,12 @@ void mean_filter_neon(const uint8_t* src, uint8_t* dst, int width, int height) {
             uint8x8x3_t src_px8 = vld3_u8(&src[width * y_bot + x]);
             uint8x8x3_t src_px9 = vld3_u8(&src[width * y_bot + x_rt]);
 
+            // 3 registers to store result
+            uint8x8x3_t result;
+
+            // Loop through RGB colors
             for (int i = 0; i < 3; i++) {
                 uint16x8_t temp;
-                uint8x8_t result;
 
                 temp = vaddl_u8(src_px1.val[i], src_px2.val[i]);
                 temp = vaddw_u8(temp, src_px3.val[i]);
@@ -105,10 +110,14 @@ void mean_filter_neon(const uint8_t* src, uint8_t* dst, int width, int height) {
                 temp = vaddw_u8(temp, src_px8.val[i]);
                 temp = vaddw_u8(temp, src_px9.val[i]);
 
-                // TODO: Div by 9 and put the result into result variable
+                // To divide by 9 we will instead multiply by the inverse (65536/9) = 7282
+                temp = vreinterpretq_u16_s16(vqrdmulhq_s16(i168divisor, vreinterpretq_s16_u16(temp)));
 
-//                vst1_u8(dst, result);
+                // Shift right by 8, "narrow" to 8-bits (recall temp is 16-bit).
+                result.val[i] = vshrn_n_u16(temp, 8);
             }
+
+            vst3_u8(dst, result);
         }
     }
 
