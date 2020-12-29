@@ -31,8 +31,8 @@ Path("./output").mkdir(exist_ok=True)
 
 def process_images(images: list,
                    trt: bool):
+    timest = time.time()
     if trt:
-        timest = time.time()
         # x1 = torch.ones((1, 3, 224, 224)).cuda()
         # model = alexnet(pretrained=True).eval().cuda()
         # model_trt = torch2trt(model, [x1])
@@ -40,12 +40,11 @@ def process_images(images: list,
         # exit()
         model = TRTModule()
         model.load_state_dict(torch.load('alexnet_trt.pth'))
-        print("Model load time {}".format(time.time() - timest))
     else:
-        timest = time.time()
         model = alexnet(pretrained=True).eval().cuda()
-        print("Model load time {}".format(time.time() - timest))
+    print("Model load time {}".format(time.time() - timest))
 
+    timest = time.time()
     for image in images:
         index = classify_image(image, model)
         output_text = str(index) + ': ' + classes[index]
@@ -56,6 +55,7 @@ def process_images(images: list,
                   font=ImageFont.load_default())
         image.save('./output/' + image.filename.split('/')[-1])
 
+    print("Image(s) processing time {}".format(time.time() - timest))
     print('Memory allocated: ' + str(torch.cuda.memory_allocated()))
     print('Max memory allocated: ' + str(torch.cuda.max_memory_allocated()))
 
@@ -67,9 +67,7 @@ def classify_image(image: Image,
     input = Variable(image_tensor).to(device)
 
     # Predict image class
-    timest = time.time()
     output = model(input)
-    print("Image processing time {}".format(time.time() - timest))
     return output.data.cpu().numpy().argmax()
 
 
