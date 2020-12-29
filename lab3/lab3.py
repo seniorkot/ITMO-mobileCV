@@ -56,6 +56,9 @@ def process_images(images: list,
                   font=ImageFont.load_default())
         image.save('./output/' + image.filename.split('/')[-1])
 
+    print('Memory allocated: ' + str(torch.cuda.memory_allocated()))
+    print('Max memory allocated: ' + str(torch.cuda.max_memory_allocated()))
+
 
 def classify_image(image: Image,
                    model) -> int:
