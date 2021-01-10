@@ -33,11 +33,11 @@ def process_images(images: list,
                    trt: bool):
     timest = time.time()
     if trt:
-        # x1 = torch.ones((1, 3, 224, 224)).cuda()
+        # x = torch.ones((1, 3, 224, 224)).cuda()
         # model = alexnet(pretrained=True).eval().cuda()
-        # model_trt = torch2trt(model, [x1])
+        # model_trt = torch2trt(model, [x])
         # torch.save(model_trt.state_dict(), 'alexnet_trt.pth')
-        # exit()
+        # model = model_trt
         model = TRTModule()
         model.load_state_dict(torch.load('alexnet_trt.pth'))
     else:
