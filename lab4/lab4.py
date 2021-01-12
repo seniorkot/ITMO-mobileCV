@@ -99,16 +99,19 @@ def get_encodings(data_path: str) -> dict:
 
     timest = time.time()
     for img in os.listdir(data_path):
-        image = cv2.imread(f'{data_path}/{img}', )
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        locations = fcr.face_locations(image)
-        if len(locations) != 1:
-            print("Image {} not suitable for training: {}"
-                  .format(img, "Didn't find a face" if len(locations) < 1
-            else "Found more than one face"))
-        else:
-            encode = fcr.face_encodings(image)[0]
-            encodings[os.path.splitext(img)[0]] = encode
+        try:
+            image = cv2.imread(f'{data_path}/{img}', )
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            locations = fcr.face_locations(image)
+            if len(locations) != 1:
+                print("Image {} not suitable for training: {}"
+                      .format(img, "Didn't find a face" if len(locations) < 1
+                              else "Found more than one face"))
+            else:
+                encode = fcr.face_encodings(image)[0]
+                encodings[os.path.splitext(img)[0]] = encode
+        except cv2.error:
+            pass
     print(f'Completed encoding of {len(encodings)} faces in '
           f'{time.time() - timest} sec')
     return encodings
@@ -166,15 +169,17 @@ def predict(knn_clf: neighbors.KNeighborsClassifier,
 
 def print_usage(exit_code: int):
     print('Usage: python lab4.py [-d <dir>|--data=<dir>] '
-          '[-v <path>|--video=<path>]')
+          '[-v <path>|--video=<path>] [-c <path>|--clf==<path>]')
     sys.exit(exit_code)
 
 
 def main(argv: list,
          data_path: str = './data',
-         video=None):
+         video=None,
+         model_path=None):
     try:
-        opts, args = getopt.getopt(argv, "d:v:", ["data=", "video=", "help"])
+        opts, args = getopt.getopt(argv, "d:v:c:", ["data=", "video=",
+                                                    "clf=", "help"])
     except getopt.GetoptError:
         print_usage(1)
 
@@ -189,18 +194,20 @@ def main(argv: list,
                 print('Video must be an existing file')
                 sys.exit(2)
             video = arg
+        elif opt in ['-c', '--clf']:
+            model_path = arg
         elif opt in ['--help']:
             print_usage(0)
         else:
             print_usage(1)
 
     # Train classifier
-    knn_clf = train(data_path)
+    knn_clf = train(data_path, model_path=model_path)
     if knn_clf is None:
-        print('Classifier is not trained')
+        print('Failed to train classifier')
         sys.exit(3)
 
-    show_frame(knn_clf)
+    show_frame(knn_clf, video=video)
 
 
 if __name__ == "__main__":
