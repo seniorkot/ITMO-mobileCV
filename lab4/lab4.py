@@ -5,9 +5,11 @@
 
 import getopt
 import sys
+import os
 import time
 
 import cv2
+import pickle
 import face_recognition
 import numpy as np
 
@@ -39,13 +41,33 @@ def gstreamer_pipeline(capture_width=1280,
     )
 
 
+def get_encodings(data_path: str) -> dict:
+    encoding_path = os.path.join(data_path, 'encodings.data')
+    encodings = {}
+
+    if os.path.isfile(encoding_path):
+        with open(encoding_path, 'rb') as f:
+            encodings = pickle.load(f)
+    else:
+        for img in os.listdir(data_path):
+            image = cv2.imread(f'{data_path}/{img}', )
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            encode = face_recognition.face_encodings(image)[0]
+            encodings[os.path.splitext(img)[0]] = encode
+        with open(encoding_path, 'wb') as f:
+            pickle.dump(encodings, f)
+    return encodings
+
+
 def print_usage(exit_code: int):
-    print('Usage: python lab4.py [-d <dir>|--data=<dir>]'
+    print('Usage: python lab4.py [-d <dir>|--data=<dir>] '
           '[-v <path>|--video=<path>]')
     sys.exit(exit_code)
 
 
-def main(argv: list):
+def main(argv: list,
+         data_path: str = './data',
+         video=None):
     try:
         opts, args = getopt.getopt(argv, "d:v:", ["data=", "video=", "help"])
     except getopt.GetoptError:
@@ -53,14 +75,25 @@ def main(argv: list):
 
     for opt, arg in opts:
         if opt in ['-d', '--data']:
-            pass  # TODO: Set data path
+            if not os.path.isdir(arg):
+                print('Data directory doesn\'t exist')
+                sys.exit(2)
+            data_path = arg
         elif opt in ['-v', '--video']:
-            pass  # TODO: Set video path
+            if not os.path.isfile(arg):
+                print('Video must be an existing file')
+                sys.exit(2)
+            video = arg
         elif opt in ['--help']:
             print_usage(0)
         else:
             print_usage(1)
-    # TODO: Get face encodings first
+
+    # Encode faces
+    timest = time.time()
+    encodings = get_encodings(data_path)
+    print(f'Completed encoding of {len(encodings)} faces in '
+          f'{time.time() - timest} sec')
     # TODO: Show camera or video, locate faces, etc.
 
 
