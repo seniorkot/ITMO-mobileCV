@@ -95,29 +95,22 @@ def show_frame(knn_clf: neighbors.KNeighborsClassifier,
 
 
 def get_encodings(data_path: str) -> dict:
-    encoding_path = os.path.join(data_path, 'encodings.data')
     encodings = {}
 
-    if os.path.isfile(encoding_path):
-        with open(encoding_path, 'rb') as f:
-            encodings = pickle.load(f)
-    else:
-        timest = time.time()
-        for img in os.listdir(data_path):
-            image = cv2.imread(f'{data_path}/{img}', )
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            locations = fcr.face_locations(image)
-            if len(locations) != 1:
-                print("Image {} not suitable for training: {}"
-                      .format(img, "Didn't find a face" if len(locations) < 1
-                              else "Found more than one face"))
-            else:
-                encode = fcr.face_encodings(image)[0]
-                encodings[os.path.splitext(img)[0]] = encode
-        print(f'Completed encoding of {len(encodings)} faces in '
-              f'{time.time() - timest} sec')
-        with open(encoding_path, 'wb') as f:
-            pickle.dump(encodings, f)
+    timest = time.time()
+    for img in os.listdir(data_path):
+        image = cv2.imread(f'{data_path}/{img}', )
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        locations = fcr.face_locations(image)
+        if len(locations) != 1:
+            print("Image {} not suitable for training: {}"
+                  .format(img, "Didn't find a face" if len(locations) < 1
+            else "Found more than one face"))
+        else:
+            encode = fcr.face_encodings(image)[0]
+            encodings[os.path.splitext(img)[0]] = encode
+    print(f'Completed encoding of {len(encodings)} faces in '
+          f'{time.time() - timest} sec')
     return encodings
 
 
