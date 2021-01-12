@@ -7,13 +7,18 @@ import getopt
 import sys
 import os
 import time
+import pickle
+import csv
+from pathlib import Path
+from datetime import datetime
 
 import cv2
-import pickle
 import math
 import face_recognition as fcr
 from sklearn import neighbors
-import numpy as np
+
+
+Path("./output").mkdir(exist_ok=True)
 
 
 def gstreamer_pipeline(capture_width=1280,
@@ -45,6 +50,7 @@ def gstreamer_pipeline(capture_width=1280,
 
 def show_frame(knn_clf: neighbors.KNeighborsClassifier,
                video=None):
+    attendace = {}
     if video is not None:
         print('Not none')
         cap = cv2.VideoCapture(video)
@@ -74,13 +80,25 @@ def show_frame(knn_clf: neighbors.KNeighborsClassifier,
             if len(face_locations) > 0:
                 predictions = predict(knn_clf, imgS, face_locations)
 
-                # # for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):
-                # for faceLoc in face_locations:
-                #     y1, x2, y2, x1 = faceLoc
-                #     y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
-                #     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                #     # cv2.rectangle(frame, (x1, y2 - 35), (x2, y2), (0, 255, 0),
-                #     #               cv2.FILLED)
+                for prediction in predictions:
+                    name = prediction[0]
+                    if name != 'Unknown' and name not in attendace:
+                        att_time = \
+                            datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+                        attendace[name] = att_time
+                        y1, x2, y2, x1 = prediction[1]
+                        y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
+                        img_copy = frame.copy()
+                        cv2.rectangle(img_copy, (x1, y1), (x2, y2),
+                                      (0, 255, 0), 2)
+                        cv2.rectangle(img_copy, (x1, y2 - 30), (x2, y2),
+                                      (0, 255, 0), cv2.FILLED)
+                        text = str(name + ' ' + att_time)
+                        cv2.putText(img_copy, text, (x1 + 6, y2 - 6),
+                                    cv2.FONT_HERSHEY_PLAIN, 1.0,
+                                    (255, 255, 255), 2)
+                        filename = str('./output/' + name + '.jpg')
+                        cv2.imwrite(filename, img_copy)
 
             # Stop the program on the ESC key or check masks
             if cv2.waitKey(1) & 0xFF == 27:
@@ -90,6 +108,11 @@ def show_frame(knn_clf: neighbors.KNeighborsClassifier,
 
         cap.release()
         cv2.destroyAllWindows()
+
+        with open('./output/attendance.csv', 'w', newline='') as f:
+            w = csv.writer(f)
+            w.writerow(['name', 'time'])
+            w.writerows(attendace.items())
     else:
         print("Unable to open camera")
 
@@ -162,7 +185,7 @@ def predict(knn_clf: neighbors.KNeighborsClassifier,
 
     # Predict classes and remove classifications that aren't
     # within the threshold
-    return [(pred, loc) if rec else ("unknown", loc)
+    return [(pred, loc) if rec else ("Unknown", loc)
             for pred, loc, rec in zip(knn_clf.predict(face_encodings),
                                       face_locations, are_matches)]
 
