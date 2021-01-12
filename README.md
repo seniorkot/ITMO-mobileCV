@@ -47,4 +47,33 @@ This code was tested on Jetson Nano platform. The results are listed below in th
 | 2 | Ultra HD | 508814 | 168508 |
 | 3 | Ultra HD | 258277 | 152980 |
 
-## Lab 3 (TODO)
+## Lab 3 (passed)
+Classifies input images via pretrained AlexNet neural network using PyTorch and torchvision.
+
+Usage: `python lab3.py [--trt] images...`<br>
+Output: <i>./output/<image_name></i> with class ID and label at the bottom of the image.
+
+**Params:**<br>
+***--trt*** - Enables TensorRT optimization **(optional)**
+
+**Testing:**<br>
+This code was tested on Jetson Nano platform. The results are listed below in the table.
+
+| Name | Weights load, sec |	Images processing, sec	| Max memory allocated, byte |
+|:----:|:----:|:----:|:----:|
+| Without TRT |	20.54 | 26.13 |	257948160 |
+| TRT |	285 | 3.5 |	606208 |
+| TRT (saved state) |	40 | 3.5 |	606208 |
+
+## Lab 4 (passed)
+Captures a camera image (or video) and locates faces on it. 
+When the trained KNN classifier recognizes the face, a screenshot is captured and a new record with name and time is added to CSV file.
+This program uses <i>face_recognition</i> and <i>scikit-learn</i> libraries to locate and classify people.
+
+Usage: `python lab4.py [-d <dir>|--data=<dir>] [-v <path>|--video=<path>] [-c <path>|--clf==<path>]`<br>
+Output: <i>./output/attendance.csv</i> and sreenhots of captured people at first time.
+
+**Params:**<br>
+***-d*** or ***--data*** - Train data directory **(default: ./data)**<br>
+***-v*** or ***--video*** - Video to capture **(default: camera capture)**<br>
+***-c*** or ***--clf*** - Load classificator state from file or create new one **(optional)**
