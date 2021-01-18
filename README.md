@@ -71,7 +71,7 @@ When the trained KNN classifier recognizes the face, a screenshot is captured an
 This program uses <i>face_recognition</i> and <i>scikit-learn</i> libraries to locate and classify people.
 
 Usage: `python lab4.py [-d <dir>|--data=<dir>] [-v <path>|--video=<path>] [-c <path>|--clf==<path>]`<br>
-Output: <i>./output/attendance.csv</i> and sreenhots of captured people at first time.
+Output: <i>./output/attendance.csv</i> and screenshots of captured people at first time.
 
 **Params:**<br>
 ***-d*** or ***--data*** - Train data directory **(default: ./data)**<br>
